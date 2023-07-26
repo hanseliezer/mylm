@@ -1,15 +1,28 @@
 #' Fit a linear model
 #'
-#' @param formula an object of class "formula" (or one that can be coerced to that class) a symbolic description of the model to be fitted. The details of model specification are given under ‘Details’.
+#' @param formula an object of class "formula" (or one that can be coerced to that class) a symbolic description of the model to be
+#' fitted. The details of model specification are given under ‘Details’.
 #'
-#' @param data an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the variables in the model. If not found in data, the variables are taken from environment(formula), typically the environment from which lm is called.
+#' @param data an optional data frame, list or environment (or object coercible by as.data.frame to a data frame) containing the
+#' variables in the model. If not found in data, the variables are taken from environment(formula), typically the environment
+#' from which lm is called.
 #'
 #' @param subset an optional vector specifying a subset of observations to be used in the fitting process.
 #'
 #' @export
 mylm <- function(formula, data, subset=NULL) {
+  
+  # check that dataset is loaded in environment
+  # deparse(substitute()) to convert the data argument into string
+  if (!exists(deparse(substitute(data)))) {
+    stop("Dataset not found in local environment.")
+  }
 
-  if(!is.null(subset)) data <- data[subset,]
+  if(!is.null(subset) && !all(subset %in% colnames(data))) {
+    stop("At least one column in subset not found in dataset.")
+  } else if (!is.null(subset)) {
+    data <- data[, subset]
+  }
 
   yname <- as.character(formula[[2]])
   yvec <- data[,yname]
