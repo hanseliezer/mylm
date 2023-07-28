@@ -10,45 +10,50 @@
 #' @param subset an optional vector specifying a subset of observations to be used in the fitting process.
 #'
 #' @export
-mylm <- function(formula, data, subset=NULL) {
-  
-  # check that dataset is loaded in environment; deparse(substitute()) to convert the data argument into string
-  if (!exists(deparse(substitute(data)))) {
-    stop("Dataset not found in local environment.")
-  }
-  
+mylm <- function(formula, data=NULL, subset=NULL) {
+
   # check if first argument is of class 'formula'; seems that any non-quoted string is a
   # formula as long as it has a ~ in it, so can only test if it's of different type like
-  # string, numeric
+  # numeric
   if (!rlang::is_formula(formula)) {
     stop("Invalid formula entered.")
   }
   
-  # check that all column names specified in formula is in dataset; setdiff lists all elements that are not
-  # in colnames(data)
-  if (length(setdiff(all.vars(formula), colnames(data))) > 0) {
-    stop("Formula has included non-existing columns.")
-  }
-  
-  # only evaluate if subset is not null
-  if (!is.null(subset)) {
-    # only accept subset if they supply row numbers or a logical vector
-    if (!class(subset) %in% c('numeric', 'integer', 'logical')) {
-      stop("Subset invalid: must be numeric or logical.")
+  # if no data is given, all variables in formula must be found in environment
+  if (is.null(data)) {
+    if (!all(all.vars(formula) %in% ls(envir=.GlobalEnv))) {
+      stop("Dataset not given, and variables stated in formula not found in environment.")
     }
-    
-    # subset of a data should have smaller size than the data; supplying row numbers bigger than height of dataset
-    # will not throw error, but return empty rows, so preemptively stop if length of data subset is longer
-    if (nrow(data[subset, ]) > nrow(data)) {
-      stop("Invalid subset: results in larger dataset.")
-    } else {
-      data <- data[subset, ]
+  # only evaluate when data is given
+  } else {
+    # only evaluate if subset is not null
+    if (!is.null(subset)) {
+      # only accept subset if they supply row numbers or a logical vector
+      if (!class(subset) %in% c('numeric', 'integer', 'logical')) {
+        stop("Subset invalid: must be numeric or logical.")
+      }
+
+      # subset of a data should have smaller size than the data; supplying row numbers bigger than height of dataset
+      # will not throw error, but return empty rows, so preemptively stop if length of data subset is longer
+      if (nrow(data[subset, ]) > nrow(data)) {
+        stop("Invalid subset: results in larger dataset.")
+      } else {
+        data <- data[subset, ]
+      }
     }
   }
-  
-  yname <- as.character(formula[[2]])
-  yvec <- data[, yname]
-  xmat <- model.matrix(formula, data=data)
+
+  # if no data is given, rely entirely on formula
+  if (is.null(data)) {
+    # eval(as.name()) tells R to find an object with given name
+    yname <- eval(as.name(formula[[2]]))
+    yvec <- yname
+    xmat <- model.matrix(formula)
+  } else {
+    yname <- as.character(formula[[2]])
+    yvec <- data[, yname]
+    xmat <- model.matrix(formula, data=data)
+  }
   df.residual <- nrow(xmat) - ncol(xmat)
 
   xxinv <- solve(t(xmat) %*% xmat)

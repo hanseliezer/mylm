@@ -1,49 +1,51 @@
-gambia <- read.csv("../gambia - for testing.csv")
+diab <- read.csv("../diabetes.txt", sep=" ")
+y_diab <- diab$y
+age_diab <- diab$age
+glu_diab <- diab$glu
 
-test_that("Verify formula argument", {
+test_that("Verify validity of formula argument", {
   
   # wrong type
-  expect_error(mylm("not a formula", data=gambia),
+  expect_error(mylm("not a formula", data=diab),
                "Invalid formula entered.")
-  expect_error(mylm(3333, data=gambia),
+  expect_error(mylm(3333, data=diab),
                "Invalid formula entered.")
   
-  # column doesn't exist
-  expect_error(mylm(pos ~ netuse + income, data=gambia),
-               "Formula has included non-existing columns.")
-  
-  # correct formula and column names all exist
-  expect_silent(mylm(pos ~ age + green, data=gambia))
+  # correct formula
+  expect_silent(mylm(y ~ age + ldl + ltg, data=diab))
 })
 
-test_that("Verify data argument", {
-  # wrong dataset name
-  expect_error(mylm(pos ~ age + netuse, data=gamb),
-               "Dataset not found in local environment.")
+test_that("Verify formula in presence/non-presence of data argument", {
+  # no data is given, and no chol_diab in environment
+  expect_error(mylm(y_diab ~ age_diab + chol_diab),
+               "Dataset not given, and variables stated in formula not found in environment.")
+  
+  # no data is given, and all variables exist in environment
+  expect_silent(mylm(y_diab ~ age_diab + glu_diab))
   
   # correct dataset name
-  expect_silent(mylm(pos ~ netuse + green, data=gambia))
+  expect_silent(mylm(y ~ tc + hdl, data=diab))
 })
 
 test_that("Verify subset argument", {
   # subset is of type character
-  expect_error(mylm(pos ~ age + netuse, data=gambia, subset=rep(c("A", "B"), 10)),
+  expect_error(mylm(y ~ age + bmi, data=diab, subset=rep(c("A", "B"), 10)),
                "Subset invalid: must be numeric or logical.")
   
   # subset is of type data.frame
-  expect_error(mylm(pos ~ age + netuse, data=gambia, subset=gambia),
+  expect_error(mylm(y ~ age + bmi, data=diab, subset=diab),
                "Subset invalid: must be numeric or logical.")
   
   # subset is of type numeric
-  expect_silent(mylm(pos ~ age + netuse, data=gambia, subset=seq(1, 100, 2)))
+  expect_silent(mylm(y ~ age + bmi, data=diab, subset=seq(1, 100, 2)))
   
   # subset is of type logical
-  expect_silent(mylm(pos ~ age + green, data=gambia, subset=c(TRUE, FALSE, TRUE)))
+  expect_silent(mylm(y ~ age + bmi, data=diab, subset=c(TRUE, FALSE, TRUE)))
   
   # subset is larger
-  expect_error(mylm(pos ~ age + netuse, data=gambia, subset=c(1:10000)),
+  expect_error(mylm(y ~ age + bmi, data=diab, subset=c(1:10000)),
                "Invalid subset: results in larger dataset.")
   
   # subset is smaller
-  expect_silent(mylm(pos ~ age + green, data=gambia, subset=c(1, 5:19, 21:104)))
+  expect_silent(mylm(y ~ age + bmi, data=diab, subset=c(1, 5:19, 21:104)))
 })
