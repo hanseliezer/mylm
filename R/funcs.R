@@ -48,6 +48,7 @@ mylm <- function(formula, data=NULL, subset=NULL) {
     # eval(as.name()) tells R to find an object with given name
     yname <- eval(as.name(formula[[2]]))
     yvec <- yname
+    # model.matrix can accept formula and automatically look them up in environment
     xmat <- model.matrix(formula)
   } else {
     yname <- as.character(formula[[2]])
@@ -55,13 +56,24 @@ mylm <- function(formula, data=NULL, subset=NULL) {
     xmat <- model.matrix(formula, data=data)
   }
   df.residual <- nrow(xmat) - ncol(xmat)
-
+  
+  # inverse of (X^T X)
   xxinv <- solve(t(xmat) %*% xmat)
+  # find beta estimates: (X^T X)^-1 X^T y
   coef <- as.vector(xxinv %*% t(xmat) %*% yvec)
+  # match the betas with the column names
   names(coef) <- colnames(xmat)
+  # calculate y based on beta estimates
   yfit <- as.vector(xmat %*% coef)
+  # give names to each element in fitted values with row numbers of the dataset, in style of lm()
+  names(yfit) <- rownames(data)
+  # residuals are simply difference between fitted y and true y
   residuals <- yvec - yfit
+  # same as fitted values
+  names(residuals) <- rownames(data)
+  # residual standard error
   sigma <- sqrt(sum(residuals^2) / df.residual)
+  # variance-covariance matrix
   vcov <- sigma^2 * xxinv
 
   mylmobject <- list(call=match.call(),
@@ -157,11 +169,11 @@ print.summary.mylm <- function(x,...) {
     cat("---\n")
     cat("Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n")
     cat("\n")
-    cat("Residual standard error: ",sigma," on ",df.residual," degrees of freedom\n")
+    cat("Residual standard error: ", sigma," on ", df.residual, " degrees of freedom\n")
     cat("Multiple R-squared: "); cat(r.squared); cat(" ");
-    cat("Adjusted R-squared: "); cat(adj.r.squared); cat("\n")#	Adjusted R-squared:  0.2261
+    cat("Adjusted R-squared: "); cat(adj.r.squared); cat("\n") #	Adjusted R-squared:  0.2261
     cat("F-statistic: "); cat(fstat); cat(" on "); cat(npar-1); cat(" and "); cat(df.residual);
-    cat(" DF, p-value "); cat(pvalue); cat("\n")#,25.25 on 1 and 82 DF,  p-value: 2.906e-06
+    cat(" DF, p-value "); cat(pvalue); cat("\n") #, 25.25 on 1 and 82 DF,  p-value: 2.906e-06
 
     cat("\nVariance Covariance matrix:\n")
     print(vcov)
