@@ -10,6 +10,7 @@
 #' @param subset an optional vector specifying a subset of observations to be used in the fitting process.
 #'
 #' @export
+
 mylm <- function(formula, data=NULL, subset=NULL) {
 
   # check if first argument is of class 'formula'; seems that any non-quoted string is a
