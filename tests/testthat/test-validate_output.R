@@ -1,9 +1,12 @@
 diab <- read.csv("../diabetes.txt", sep=" ")
+# model with all predictors included
+diab_mod1 <- mylm(y ~ ., data=diab)
+# smaller model
+random_rows <- seq(1, nrow(diab), 3)
+small_formula <- y ~ ldl + hdl+ bmi
+diab_mod2 <- mylm(small_formula, data=diab, subset=random_rows)
 
-test_that("Verify regression output", {
-  
-  # model with all predictors included
-  diab_mod1 <- mylm(y ~ ., data=diab)
+test_that("Verify regression output of full model", {
   
   # number of coefficients should match the number of columns in the original table (minus y, plus intercept)
   expect_length(diab_mod1$coef, ncol(diab))
@@ -14,12 +17,12 @@ test_that("Verify regression output", {
   # coefficients should all be type double ('decimals')
   expect_type(diab_mod1$coef, "double")
   
-  # try smaller model with subsetting
-  random_rows <- seq(1, nrow(diab), 3)
-  diab_mod2 <- mylm(y ~ ldl + hdl+ bmi, data=diab, subset=random_rows)
+})
+
+test_that("Verify regression output of smaller model", {
   
-  # number of coefficients should match the number of predictors chosen
-  expect_length(diab_mod2$coef, 4)
+  # number of coefficients should match the number of predictors chosen plus intercept
+  expect_length(diab_mod2$coef, length(small_formula) + 1)
   
   # number of rows in the data used should match the length of the subset
   expect_equal(nrow(diab_mod2$data), length(random_rows))

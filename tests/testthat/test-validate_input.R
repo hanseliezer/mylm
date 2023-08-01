@@ -4,7 +4,7 @@ assign("y_diab", diab$y, envir=.GlobalEnv)
 assign("age_diab", diab$age, envir=.GlobalEnv)
 assign("glu_diab", diab$glu, envir=.GlobalEnv)
 
-test_that("Verify validity of formula argument", {
+test_that("Verify formula argument", {
   
   # wrong type
   expect_error(mylm("not a formula", data=diab),
@@ -33,25 +33,25 @@ test_that("Verify formula in presence/non-presence of data argument", {
 
 test_that("Verify subset argument", {
   
-  # subset is of type character
+  # subset is of type character: not OK
   expect_error(mylm(y ~ age + bmi, data=diab, subset=rep(c("A", "B"), 10)),
                "Subset invalid: must be numeric or logical.")
   
-  # subset is of type data.frame
+  # subset is of type data.frame: not OK
   expect_error(mylm(y ~ age + bmi, data=diab, subset=diab),
                "Subset invalid: must be numeric or logical.")
   
-  # subset is of type numeric
+  # subset is of type numeric: OK
   expect_silent(mylm(y ~ age + bmi, data=diab, subset=seq(1, 100, 2)))
   
-  # subset is of type logical
+  # subset is of type logical: OK
   expect_silent(mylm(y ~ age + bmi, data=diab, subset=c(TRUE, FALSE, TRUE)))
   
-  # subset is larger
+  # subset creates larger dataset
   expect_error(mylm(y ~ age + bmi, data=diab, subset=c(1:10000)),
                "Invalid subset: results in larger dataset.")
   
-  # subset is smaller
+  # subset creates smaller dataset
   expect_silent(mylm(y ~ age + bmi, data=diab, subset=c(1, 5:19, 21:104)))
   
 })

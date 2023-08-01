@@ -13,7 +13,7 @@
 
 mylm <- function(formula, data=NULL, subset=NULL) {
 
-  # check if first argument is of class 'formula'; seems that any non-quoted string is a
+  # check if formula argument is of class 'formula'; seems that any non-quoted string is a
   # formula as long as it has a ~ in it, so can only test if it's of different type like
   # numeric
   if (!rlang::is_formula(formula)) {
@@ -25,17 +25,18 @@ mylm <- function(formula, data=NULL, subset=NULL) {
     if (!all(all.vars(formula) %in% ls(envir=.GlobalEnv))) {
       stop("Dataset not given, and variables stated in formula not found in environment.")
     }
-  # only evaluate when data is given
+  # evaluate below when data is given
   } else {
-    # only evaluate if subset is not null
+    # evaluate if subset is not null
     if (!is.null(subset)) {
       # only accept subset if they supply row numbers or a logical vector
       if (!class(subset) %in% c('numeric', 'integer', 'logical')) {
         stop("Subset invalid: must be numeric or logical.")
       }
 
-      # subset of a data should have smaller size than the data; supplying row numbers bigger than height of dataset
-      # will not throw error, but return empty rows, so preemptively stop if length of data subset is longer
+      # subset of data should be smaller than the original data; supplying row numbers bigger
+      # than height of dataset will not throw error but it will create empty rows, so preemptively
+      # stop if length of data subset is longer
       if (nrow(data[subset, ]) > nrow(data)) {
         stop("Invalid subset: results in larger dataset.")
       } else {
@@ -46,7 +47,7 @@ mylm <- function(formula, data=NULL, subset=NULL) {
 
   # if no data is given, rely entirely on formula
   if (is.null(data)) {
-    # eval(as.name()) tells R to find an object with given name
+    # eval(as.name()) tells R to find an object with given name in environment
     yname <- eval(as.name(formula[[2]]))
     yvec <- yname
     # model.matrix can accept formula and automatically look them up in environment
@@ -70,13 +71,14 @@ mylm <- function(formula, data=NULL, subset=NULL) {
   names(yfit) <- rownames(data)
   # residuals are simply difference between fitted y and true y
   residuals <- yvec - yfit
-  # same as fitted values
+  # give names to each element in residuals
   names(residuals) <- rownames(data)
   # residual standard error
   sigma <- sqrt(sum(residuals^2) / df.residual)
   # variance-covariance matrix
   vcov <- sigma^2 * xxinv
-
+  
+  # return object with all this stuff
   mylmobject <- list(call=match.call(),
                      formula=formula,
                      data=data,

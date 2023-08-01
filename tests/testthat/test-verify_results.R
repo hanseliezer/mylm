@@ -9,6 +9,9 @@ test_that("Verify regression results", {
   # compare beta estimates
   expect_equal(lm_true$coefficients, lm_mylm$coef)
   
+  # compare fitted values
+  expect_equal(lm_true$fitted.values, lm_mylm$fitted.values)
+  
   # compare residuals
   expect_equal(lm_true$residuals, lm_mylm$residuals)
   
